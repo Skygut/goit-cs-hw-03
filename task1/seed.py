@@ -17,11 +17,18 @@ fake = Faker()
 def create_connect():
     try:
         conn = psycopg2.connect(
-            host=os.getenv("POSTGRES_HOST"),
-            database=os.getenv("POSTGRES_DB"),
-            user=os.getenv("POSTGRES_USER"),
-            password=os.getenv("POSTGRES_PASSWORD"),
+            dbname="postgres",
+            user="postgres",
+            password="1234",
+            host="localhost",
         )
+
+        # conn = psycopg2.connect(
+        #     host=os.getenv("POSTGRES_HOST"),
+        #     database=os.getenv("POSTGRES_DB"),
+        #     user=os.getenv("POSTGRES_USER"),
+        #     password=os.getenv("POSTGRES_PASSWORD"),
+        # )
         try:
             yield conn
         except:
