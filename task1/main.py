@@ -225,19 +225,19 @@ if __name__ == "__main__":
     try:
         with create_connect() as conn:
 
-            # print(get_tasks_by_user_id(conn, 1))
-            # print(get_tasks_by_status(conn, "new"))
-            # print(change_task_status(conn, 3, 2))
-            # print(get_users_without_tasks(conn))
-            # print(create_task(conn, "new task", "description", 1, 2))
-            # print(get_not_completed_tasks(conn))
-            # print(delete_task_by_id(conn, 2))
-            # print(get_users_by_email(conn, ".com"))
-            # print(change_user_name(conn, 1, "Hans Peter"))
-            # print(get_count_tasks_by_status(conn))
-            # print(get_tasks_by_user_email_domain(conn, "@example.net"))
-            # print(get_tasks_without_description(conn))
-            # print(get_users_and_tasks_by_status(conn, "new"))
+            print(get_tasks_by_user_id(conn, 1))
+            print(get_tasks_by_status(conn, "new"))
+            print(change_task_status(conn, 3, 2))
+            print(get_users_without_tasks(conn))
+            print(create_task(conn, "new task", "description", 1, 2))
+            print(get_not_completed_tasks(conn))
+            print(delete_task_by_id(conn, 2))
+            print(get_users_by_email(conn, ".com"))
+            print(change_user_name(conn, 1, "Hans Peter"))
+            print(get_count_tasks_by_status(conn))
+            print(get_tasks_by_user_email_domain(conn, "@example.net"))
+            print(get_tasks_without_description(conn))
+            print(get_users_and_tasks_by_status(conn, "new"))
             print(get_count_tasks_by_users(conn))
 
     except RuntimeError as er:
