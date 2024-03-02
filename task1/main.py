@@ -240,21 +240,6 @@ if __name__ == "__main__":
             # print(get_users_and_tasks_by_status(conn, "new"))
             print(get_count_tasks_by_users(conn))
 
-            # cur = conn.cursor()
-            # res = (
-            #     cur.execute("SELECT * FROM users WHERE email LIKE '%@example.net';"),
-            #     None,
-            # )
-            # print(res)
-            # # cur.execute(sql, params)
-            # if cur.description:
-            #     data = cur.fetchall()
-            #     print(data)
-            #     # return data
-            # conn.commit()
-            # cur.close()
-            # conn.close()
-
     except RuntimeError as er:
         logging.error(f"Runtime error: {er}")
     except DatabaseError as er:
