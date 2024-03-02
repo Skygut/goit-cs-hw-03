@@ -1,97 +1,77 @@
 import logging
-from psycopg2 import DatabaseError
+import os
+import psycopg2
+from contextlib import contextmanager
+from dotenv import load_dotenv
+from pathlib import Path
 from connect import create_connect
 
 
-"""
-1. Отримати всі завдання певного користувача. Використайте SELECT для отримання завдань конкретного користувача за його user_id.
-
-SELECT *
-FROM users u 
-WHERE id = 5;
-
-2. Вибрати завдання за певним статусом. Використайте підзапит для вибору завдань з конкретним статусом, наприклад, 'new'.
-
-SELECT *
-FROM tasks
-WHERE status_id = (SELECT id FROM tasks WHERE name = 'new');
-
-3.  Oновити статус конкретного завдання. Змініть статус конкретного завдання на 'in progress' або інший статус.
-
-UPDATE tasks
-SET status_id = (SELECT id FROM status WHERE name = 'in progress')
-WHERE id = 1;
-
-4. Отримати список користувачів, які не мають жодного завдання. Використайте комбінацію SELECT, WHERE NOT IN і підзапит.
-
-SELECT *
-FROM users
-WHERE id NOT IN (SELECT user_id FROM tasks);
-
-5. Додати нове завдання для конкретного користувача. Використайте INSERT для додавання нового завдання.
-
-INSERT INTO tasks (title, description, status_id, user_id)
-VALUES ("Назва завдання", "Опис завдання", (SELECT id FRFOM status WHERE name = "new"),1);
+load_dotenv(Path(__file__).parent.parent / ".env")
 
 
-6. Отримати всі завдання, які ще не завершено. Виберіть завдання, чий статус не є 'завершено'.
+def get_data(conn, sql, params=None):
+    data = None
+    cur = conn.cursor()
+    try:
+        cur.execute(sql, params)
+        data = cur.fetchall()
+    except DatabaseError as er:
+        logging.error(f"Database error: {er}")
+    finally:
+        cur.close()
+    return data
 
-SELECT *
-FROM tasks
-WHERE status != 'completed';
+
+def create_data(conn, sql, params=None):
+    id = None
+    cur = conn.cursor()
+    try:
+        cur.execute(sql, params)
+        conn.commit()
+        id = cur.fetchone()[0]
+    except DatabaseError as er:
+        logging.error(f"Database error: {er}")
+        conn.rollback()
+    finally:
+        cur.close()
+
+    return id
 
 
-7. Видалити конкретне завдання. Використайте DELETE для видалення завдання за його id.
+def change_data(conn, sql, params=None):
+    cur = conn.cursor()
+    try:
+        cur.execute(sql, params)
+        conn.commit()
+    except DatabaseError as er:
+        logging.error(f"Database error: {er}")
+        conn.rollback()
+    finally:
+        cur.close()
 
-DELETE FROM tasks
-WHERE id = 2;
 
-8. Знайти користувачів з певною електронною поштою. Використайте SELECT із умовою LIKE для фільтрації за електронною поштою.
+def delete_data(conn, sql, params=None):
+    is_deleted = False
+    cur = conn.cursor()
+    try:
+        cur.execute(sql, params)
+        is_deleted = cur.rowcount > 0
+        conn.commit()
+    except DatabaseError as er:
+        logging.error(f"Database error: {er}")
+        conn.rollback()
+    finally:
+        cur.close()
 
-SELECT *
-FROM users
-WHERE email LIKE '%@example.net';
+    return is_deleted
 
-9. Оновити ім'я користувача. Змініть ім'я користувача за допомогою UPDATE.
 
-UPDATE users
-SET name = 'new name'
-WHERE id = 2;
-
-10. Отримати кількість завдань для кожного статусу. Використайте SELECT, COUNT, GROUP BY для групування завдань за статусами.
-
-SELECT status, COUNT(*) AS task_count
-FROM tasks
-GROUP BY status;
-
-11. Отримати завдання, які призначені користувачам з певною доменною частиною електронної пошти. Використайте SELECT з умовою LIKE в поєднанні з JOIN, щоб вибрати завдання, призначені користувачам, чия електронна пошта містить певний домен (наприклад, '%@example.com').
-
-SELECT tasks.*
-FROM tasks
-JOIN users ON tasks.user_id = users.id
-WHERE users.email LIKE '%@example.net';
-
-12. Отримати список завдань, що не мають опису. Виберіть завдання, у яких відсутній опис.
-
-SELECT *
-FROM tasks
-WHERE description IS NULL OR description = '';
-
-13. Вибрати користувачів та їхні завдання, які є у статусі 'in progress'. Використайте INNER JOIN для отримання списку користувачів та їхніх завдань із певним статусом.
-
-SELECT users.*, tasks.*
-FROM users
-INNER JOIN tasks ON users.id = tasks.user_id
-WHERE tasks.status = 'in progress';
-
-14. Отримати користувачів та кількість їхніх завдань. Використайте LEFT JOIN та GROUP BY для вибору користувачів та підрахунку їхніх завдань.
-
-SELECT users.id, users.name, COUNT(tasks.id) AS task_count
-FROM users
-LEFT JOIN tasks ON users.id = tasks.user_id
-GROUP BY users.id, users.name;
-
-"""
+def get_tasks_by_user_id(conn, user_id):
+    sql = """
+    SELECT * FROM tasks WHERE user_id = %s
+    """
+    return get_data(conn, sql, (user_id,))
 
 
 def get_task_by_id(conn, task_id):
@@ -99,17 +79,181 @@ def get_task_by_id(conn, task_id):
     select * from tasks
     where id = %s;
     """
-
     return get_data(conn, sql, (task_id,))
+
+
+def get_tasks_by_status(conn, status):
+    sql = """
+    select * from tasks where status_id in 
+    (select id from status where name = %s);
+    """
+    return get_data(conn, sql, (status,))
+
+
+def change_task_status(conn, task_id, new_status_id):
+    sql = """
+    UPDATE tasks
+    SET status_id = %s
+    WHERE id = %s;
+    """
+    change_data(conn, sql, (new_status_id, task_id))
+    return get_task_by_id(conn, task_id)
+
+
+def get_users_without_tasks(conn):
+    sql = """
+    select * from users
+    where id not in (select user_id from tasks where user_id = users.id); 
+    """
+    return get_data(conn, sql)
+
+
+def create_task(conn, title, description, status_id, user_id):
+    sql = """
+    INSERT INTO tasks (title, description, 
+    status_id, user_id) VALUES (%s, %s, %s, %s)
+    RETURNING id;
+    """
+    id = create_data(conn, sql, (title, description, status_id, user_id))
+    return get_task_by_id(conn, id)
+
+
+def get_not_completed_tasks(conn):
+    sql = """
+    select * from tasks
+    where not status_id = 3;
+    """
+
+    return get_data(conn, sql)
+
+
+def delete_task_by_id(conn, task_id):
+    sql = """
+    delete from tasks where id = %s;
+    """
+
+    is_deleted = delete_data(conn, sql, (task_id,))
+
+    if is_deleted > 0:
+        return f"Task with {task_id} id deleted"
+    else:
+        return f"No task found with {task_id} id"
+
+
+def get_users_by_email(conn, email):
+    sql = """
+    select * from users where email like %s;
+    """
+
+    return get_data(conn, sql, (f"%{email}%",))
+
+
+def change_user_name(conn, user_id, new_user_name):
+    sql = """
+    update users
+    set fullname = %s
+    where id = %s;
+    """
+
+    change_data(conn, sql, (new_user_name, user_id))
+    return get_user_by_id(conn, user_id)
+
+
+def get_user_by_id(conn, user_id):
+    sql = """
+    select * from users
+    where id = %s;
+    """
+
+    return get_data(conn, sql, (user_id,))
+
+
+def get_count_tasks_by_status(conn):
+    sql = """
+    select s.id, s.name, count(*) as task_count from tasks t
+    left join status s on t.status_id = s.id
+    group by s.id
+    order by s.id;
+    """
+
+    return get_data(conn, sql)
+
+
+def get_tasks_by_user_email_domain(conn, domain):
+    sql = """
+    select t.*, u.fullname as user_fullname, u.email as user_email
+    from tasks t
+    inner join users u on t.user_id = u.id
+    where u.email like %s;
+    """
+
+    return get_data(conn, sql, (f"%{domain}",))
+
+
+def get_tasks_without_description(conn):
+    sql = """
+    select * from tasks
+    where description is null;
+    """
+
+    return get_data(conn, sql)
+
+
+def get_users_and_tasks_by_status(conn, status):
+    sql = """
+    select u.*, t.id as task_id, t.title, t.description, t.status_id from users u
+    inner join tasks t on t.user_id = u.id and t.status_id in (
+	    select id from status
+	    where name = %s
+    )
+    """
+
+    return get_data(conn, sql, (status,))
+
+
+def get_count_tasks_by_users(conn):
+    sql = """
+    select u.*, coalesce(count(t.user_id), 0) as task_count from users u
+    left join tasks t on t.user_id = u.id
+    group by u.id;
+    """
+
+    return get_data(conn, sql)
 
 
 if __name__ == "__main__":
     try:
         with create_connect() as conn:
-            """
-            Отримати всі завдання певного користувача. Використайте SELECT для отримання завдань конкретного користувача за його user_id.
-            """
-            pprint(get_tasks_by_user_id(conn, 1))
+
+            # print(get_tasks_by_user_id(conn, 1))
+            # print(get_tasks_by_status(conn, "new"))
+            # print(change_task_status(conn, 3, 2))
+            # print(get_users_without_tasks(conn))
+            # print(create_task(conn, "new task", "description", 1, 2))
+            # print(get_not_completed_tasks(conn))
+            # print(delete_task_by_id(conn, 2))
+            # print(get_users_by_email(conn, ".com"))
+            # print(change_user_name(conn, 1, "Hans Peter"))
+            # print(get_count_tasks_by_status(conn))
+            # print(get_tasks_by_user_email_domain(conn, "@example.net"))
+            # print(get_tasks_without_description(conn))
+            # print(get_users_and_tasks_by_status(conn, "new"))
+            print(get_count_tasks_by_users(conn))
+
+            # cur = conn.cursor()
+            # res = (
+            #     cur.execute("SELECT * FROM users WHERE email LIKE '%@example.net';"),
+            #     None,
+            # )
+            # print(res)
+            # # cur.execute(sql, params)
+            # if cur.description:
+            #     data = cur.fetchall()
+            #     print(data)
+            #     # return data
+            # conn.commit()
+            # cur.close()
+            # conn.close()
 
     except RuntimeError as er:
         logging.error(f"Runtime error: {er}")
