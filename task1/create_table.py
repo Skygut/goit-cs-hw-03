@@ -49,19 +49,9 @@ def create_table(conn, sql):
 
 if __name__ == "__main__":
     try:
-        conn = psycopg2.connect(
-            dbname="postgres",
-            user="postgres",
-            password="1234",
-            host="localhost",
-        )
-
-        # with create_connect() as conn:
-
-        create_table(conn, sql)
+        with create_connect() as conn:
+            create_table(conn, sql)
     except RuntimeError as er:
-        print(er)
         logging.error(f"Runtime error: {er}")
     except DatabaseError as er:
-        print(er)
         logging.error(f"Database error: {er}")
