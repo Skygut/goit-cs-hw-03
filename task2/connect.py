@@ -12,12 +12,8 @@ def create_connect() -> MongoClient:
     load_dotenv(ENV_PATH)
 
     client = MongoClient(
-        # os.getenv("MONGO_DB_HOST"),
-        # "mongodb+srv://catuser:3USCNHSKqiQ8bagO@cluster0.subb4se.mongodb.net/cats_db?retryWrites=true&w=majority&appName=Cluster0?ssl=true&ssl_cert_reqs=CERT_NONE",
-        "mongodb+srv://chubvova7:5iwhTfMLSNQUlJRp@cluster0.subb4se.mongodb.net/cats_db?retryWrites=true&w=majority&appName=Cluster0",
-        # "mongodb+srv://chubvova7:5iwhTfMLSNQUlJRp@cluster0.subb4se.mongodb.net/cats_db?ssl=True,ssl_cert_reqs=ssl.CERT_NONE",
+        os.getenv("MONGO_DB_HOST"),
         server_api=ServerApi("1"),
-        # connect=False,
     )
 
     return client
@@ -28,6 +24,5 @@ if __name__ == "__main__":
     db = client["cats_db"]
     collection = db["cats"]
     cats = collection.find()
-    # print(cats)
     for cat in cats:
         print(cat)
