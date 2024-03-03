@@ -13,9 +13,11 @@ def create_connect() -> MongoClient:
 
     client = MongoClient(
         # os.getenv("MONGO_DB_HOST"),
-        # "mongodb+srv://catuser:3USCNHSKqiQ8bagO@cluster0.subb4se.mongodb.net/cats_db?retryWrites=true&w=majority&appName=Cluster0",
+        # "mongodb+srv://catuser:3USCNHSKqiQ8bagO@cluster0.subb4se.mongodb.net/cats_db?retryWrites=true&w=majority&appName=Cluster0?ssl=true&ssl_cert_reqs=CERT_NONE",
         "mongodb+srv://chubvova7:5iwhTfMLSNQUlJRp@cluster0.subb4se.mongodb.net/cats_db?retryWrites=true&w=majority&appName=Cluster0",
+        # "mongodb+srv://chubvova7:5iwhTfMLSNQUlJRp@cluster0.subb4se.mongodb.net/cats_db?ssl=True,ssl_cert_reqs=ssl.CERT_NONE",
         server_api=ServerApi("1"),
+        # connect=False,
     )
 
     return client
