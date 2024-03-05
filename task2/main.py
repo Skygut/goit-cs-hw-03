@@ -25,26 +25,24 @@ def get_by_id(id: ObjectId) -> dict | None:
         return None
 
 
-# def create(body: dict) -> dict:
-#     try:
-#         result_one = cats_collection.insert_one(body)
-#         return get_by_id(result_one.inserted_id)
-#     except errors.PyMongoError as e:
-#         print(f"Помилка при створенні кота: {e}")
-#         return None
-
-
-def create(body: dict) -> ObjectId:
+def create():
     try:
-        result_one = cats_collection.insert_one(body)
-        return result_one  # повертаємо ObjectId нового документа
+        name = input("Введіть імʼя кота для створення: ")
+        age = int(input("Введіть вік кота: "))
+        features_input = input("Введіть особливості кота, розділені комою: ")
+        features = features_input.split(",")
+        data = {"name": name, "age": age, "features": features}
+
+        result_one = cats_collection.insert_one(data)
+        return get_by_id(result_one.inserted_id)
     except errors.PyMongoError as e:
         print(f"Помилка при створенні кота: {e}")
         return None
 
 
-def get_cat_by_name(name):
+def get_cat_by_name():
     try:
+        name = input("Введіть імʼя кота для пошуку: ")
         if name:
             return list(cats_collection.find({"name": {"$regex": name}}))
         return list(cats_collection.find())
@@ -53,57 +51,69 @@ def get_cat_by_name(name):
         return []
 
 
-def update_cat_age(name, new_age):
+def update_cat_age():
     try:
-        cats_collection.update_one({"name": name}, {"$set": {"age": new_age}})
+        name = input("Введіть імʼя кота для пошуку: ")
+        new_age = int(input("Введіть новий вік кота: "))
+        updated_cat = cats_collection.find_one_and_update(
+            {"name": name},
+            {"$set": {"age": new_age}},
+            return_document=True,
+        )
+        return updated_cat
     except errors.PyMongoError as e:
         print(f"Помилка при оновленні віку кота {name}: {e}")
 
 
-def update_by_id(id: ObjectId, body: dict) -> dict | None:
+def update_cat_name():
     try:
-        name = body.get("name")
-        age = body.get("age")
-        features = body.get("features")
-
-        data = dict()
-
-        if not name is None:
-            data["name"] = name
-        if not age is None:
-            data["age"] = age
-        if not features is None:
-            data["features"] = features
-
+        name = input("Введіть імʼя кота для пошуку: ")
+        new_name = input("Введіть нове імʼя кота: ")
         updated_cat = cats_collection.find_one_and_update(
-            {"_id": id},
-            {"$set": data},
+            {"name": name},
+            {"$set": {"name": new_name}},
             return_document=True,
         )
-
+        if updated_cat:
+            return updated_cat
+        else:
+            print(f"Кота з іменем {name} не знайдено.")
+            return None
         return updated_cat
+
     except errors.PyMongoError as e:
-        print(f"Помилка при оновленні кота з ID {id}: {e}")
-        return None
+        print(f"Помилка при оновленні імені кота {name}: {e}")
 
 
-def add_feature_by_id(id: ObjectId, new_feature: str) -> dict | None:
+def add_features_by_name():
     try:
+        name = input("Введіть імʼя кота для пошуку: ")
+        features_input = input("Введіть особливості кота, розділені комою: ")
+        new_features = [feature.strip() for feature in features_input.split(",")]
+
         updated_cat = cats_collection.find_one_and_update(
-            {"_id": id}, {"$addToSet": {"features": new_feature}}, return_document=True
+            {"name": name},
+            {"$addToSet": {"features": {"$each": new_features}}},
+            return_document=True,
         )
+        if updated_cat:
+            return updated_cat
+        else:
+            print(f"Кота з іменем {name} не знайдено.")
+            return None
         return updated_cat
     except errors.PyMongoError as e:
-        print(f"Помилка при додаванні характеристики до кота з ID {id}: {e}")
+        print(f"Помилка при додаванні характеристики до кота {name}: {e}")
         return None
 
 
-def delete_by_id(id: ObjectId) -> ObjectId | None:
+def delete_by_name():
     try:
-        result = cats_collection.delete_one({"_id": id})
-        return id if result.deleted_count == 1 else None
+        name = input("Введіть імʼя кота для видалення: ")
+        result = cats_collection.delete_one({"name": name})
+        return name if result.deleted_count == 1 else None
     except errors.PyMongoError as e:
-        print(f"Помилка при видаленні кота з ID {id}: {e}")
+        print(f"Помилка при видаленні кота {name}: {e}")
         return None
 
 
@@ -114,107 +124,49 @@ def delete_all() -> None:
         print(f"Помилка при видаленні всіх котів: {e}")
 
 
+def exit_program():
+    print("Вихід з програми...")
+    exit()
+
+
+def main_menu():
+    while True:
+        print("\nВиберіть опцію:")
+        print("1. Створити запис про кота (create)")
+        print("2. Отримати список всіх котів (get_all)")
+        print("3. Отримати кота за ім'ям (get_cat_by_name)")
+        print("4. Оновити вік кота (update_cat_age)")
+        print("5. Додати характеристику коту (add_features_by_name)")
+        print("6. Оновити імʼя кота (update_cat_name)")
+        print("7. Видалити кота за імʼям (delete_by_name)")
+        print("8. Видалити всіх котів (delete_all)")
+        print("0. Вихід (exit)")
+
+        choice = input("Ваш вибір: ")
+
+        if choice == "1":
+            print(create())
+        elif choice == "2":
+            print(get_all(""))
+        elif choice == "3":
+            print(get_cat_by_name())
+        elif choice == "4":
+            print(update_cat_age())
+        elif choice == "5":
+            print(add_features_by_name())
+        elif choice == "6":
+            print(update_cat_name())
+        elif choice == "7":
+            print(delete_by_name())
+        elif choice == "8":
+            print(delete_all())
+        elif choice == "0":
+            exit_program()
+
+
 if __name__ == "__main__":
     client = create_connect()
     db = client["db-cats"]
     cats_collection = db["cats"]
 
-    cat = {
-        "name": "Peter",
-        "age": 2,
-        "features": ["стрибає на задніх лапах", "багато спить", "хропе"],
-    }
-
-    cat1 = {
-        "name": "Saschko",
-        "age": 3,
-        "features": ["не стрибає на задніх лапах", "мало спить", "тихо спить"],
-    }
-
-    cat2 = {
-        "name": "hans",
-        "age": 4,
-        "features": ["спить в капці", "п'є пиво", "пухнастий"],
-    }
-
-    cat3 = {
-        "name": "barsik",
-        "age": 6,
-        "features": ["не ходить в капці", "дає себе гладити", "білий"],
-    }
-    id = create(cat).inserted_id
-    print(get_by_id(id))
-
-    ######
-
-    print(update_by_id(id, cat2))
-
-
-    ############
-
-    # id3 = ObjectId("65e61b7b5ef0a82d733d8dc1")
-    # cat4 = "бігає швидко, стрибає на 2 метри, рябий"
-    # print(add_feature_by_id(id3, cat4))
-
-    #############
-
-    # print(get_all(""))
-
-    #############
-
-    # print(get_all("hans"))
-
-    #############
-
-    # print(delete_by_id(id3))
-
-    ############
-
-    # print(delete_all())
-
-
-    # def main_menu():
-    # while True:
-    #     print("\nВиберіть опцію:")
-    #     print("1. Створити запис про кота (create)")
-    #     print("2. Отримати список всіх котів (get_all)")
-    #     print("3. Отримати кота за ID (get_by_id)")
-    #     print("4. Отримати кота за ім'ям (get_cat_by_name)")
-    #     print("5. Оновити вік кота (update_cat_age)")
-    #     print("6. Оновити запис про кота (update_by_id)")
-    #     print("7. Додати характеристику коту (add_feature_by_id)")
-    #     print("8. Видалити кота за ID (delete_by_id)")
-    #     print("9. Видалити всіх котів (delete_all)")
-    #     print("10. Вихід (exit)")
-
-    #     choice = input("Ваш вибір: ")
-
-    #     if choice == '1':
-    #         # Виклик функції створення запису про кота
-    #         pass  # Тут буде код для create
-    #     elif choice == '2':
-    #         # Виклик функції отримання списку всіх котів
-    #         pass  # Тут буде код для get_all
-    #     elif choice == '3':
-    #         # Виклик функції отримання кота за ID
-    #         pass  # Тут буде код для get_by_id
-    #     elif choice == '4':
-    #         # Виклик функції отримання кота за ім'ям
-    #         pass  # Тут буде код для get_cat_by_name
-    #     elif choice == '5':
-    #         # Виклик функції оновлення віку кота
-    #         pass  # Тут буде код для update_cat_age
-    #     elif choice == '6':
-    #         # Виклик функції оновлення запису про кота
-    #         pass  # Тут буде код для update_by_id
-    #     elif choice == '7':
-    #         # Виклик функції додавання характеристики коту
-    #         pass  # Тут буде код для add_feature_by_id
-    #     elif choice == '8':
-    #         # Виклик функції видалення кота за ID
-    #         pass  # Тут буде код для delete_by_id
-    #     elif choice == '9':
-    #         # Виклик функції видалення всіх котів
-    #         pass  # Тут буде код для delete_all
-    #     elif choice == '10':
-    #         print("Вих
+    main_menu()
