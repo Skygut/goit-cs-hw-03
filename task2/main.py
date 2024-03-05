@@ -143,16 +143,12 @@ if __name__ == "__main__":
         "features": ["не ходить в капці", "дає себе гладити", "білий"],
     }
     id = create(cat).inserted_id
-    # print(get_by_id(id))
-    # id = res.inserted_id
-
-    # print(update_by_id(id, cat2))
+    print(get_by_id(id))
 
     ######
 
-    # id2 = ObjectId("65e61b7b5ef0a82d733d8dc1")
+    print(update_by_id(id, cat2))
 
-    # print(update_by_id(id2, cat3))
 
     ############
 
@@ -175,3 +171,50 @@ if __name__ == "__main__":
     ############
 
     # print(delete_all())
+
+
+    # def main_menu():
+    # while True:
+    #     print("\nВиберіть опцію:")
+    #     print("1. Створити запис про кота (create)")
+    #     print("2. Отримати список всіх котів (get_all)")
+    #     print("3. Отримати кота за ID (get_by_id)")
+    #     print("4. Отримати кота за ім'ям (get_cat_by_name)")
+    #     print("5. Оновити вік кота (update_cat_age)")
+    #     print("6. Оновити запис про кота (update_by_id)")
+    #     print("7. Додати характеристику коту (add_feature_by_id)")
+    #     print("8. Видалити кота за ID (delete_by_id)")
+    #     print("9. Видалити всіх котів (delete_all)")
+    #     print("10. Вихід (exit)")
+
+    #     choice = input("Ваш вибір: ")
+
+    #     if choice == '1':
+    #         # Виклик функції створення запису про кота
+    #         pass  # Тут буде код для create
+    #     elif choice == '2':
+    #         # Виклик функції отримання списку всіх котів
+    #         pass  # Тут буде код для get_all
+    #     elif choice == '3':
+    #         # Виклик функції отримання кота за ID
+    #         pass  # Тут буде код для get_by_id
+    #     elif choice == '4':
+    #         # Виклик функції отримання кота за ім'ям
+    #         pass  # Тут буде код для get_cat_by_name
+    #     elif choice == '5':
+    #         # Виклик функції оновлення віку кота
+    #         pass  # Тут буде код для update_cat_age
+    #     elif choice == '6':
+    #         # Виклик функції оновлення запису про кота
+    #         pass  # Тут буде код для update_by_id
+    #     elif choice == '7':
+    #         # Виклик функції додавання характеристики коту
+    #         pass  # Тут буде код для add_feature_by_id
+    #     elif choice == '8':
+    #         # Виклик функції видалення кота за ID
+    #         pass  # Тут буде код для delete_by_id
+    #     elif choice == '9':
+    #         # Виклик функції видалення всіх котів
+    #         pass  # Тут буде код для delete_all
+    #     elif choice == '10':
+    #         print("Вих

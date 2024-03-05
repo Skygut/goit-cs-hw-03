@@ -66,3 +66,27 @@ def delete_all() -> None:
         cats_collection.delete_many({})
     except errors.PyMongoError as e:
         print(f"Помилка при видаленні всіх котів: {e}")
+
+
+def create(body: dict) -> ObjectId:
+    try:
+        result_one = cats_collection.insert_one(body)
+        return result_one.inserted_id  # повертаємо ObjectId нового документа
+    except errors.PyMongoError as e:
+        print(f"Помилка при створенні кота: {e}")
+        return None
+
+
+def get_cat_by_name(name):
+    try:
+        return collection.find_one({"name": name})
+    except errors.PyMongoError as e:
+        print(f"Помилка при пошуку кота з ім'ям {name}: {e}")
+        return None
+
+
+def update_cat_age(name, new_age):
+    try:
+        collection.update_one({"name": name}, {"$set": {"age": new_age}})
+    except errors.PyMongoError as e:
+        print(f"Помилка при оновленні віку кота {name}: {e}")
