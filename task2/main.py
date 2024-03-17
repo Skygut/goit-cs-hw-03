@@ -3,8 +3,10 @@ from pymongo import errors
 from bson.objectid import ObjectId
 
 client = create_connect()
-db = client["db-cats"]
-cats_collection = db["cats"]
+# db = client["db-cats"]
+# cats_collection = db["cats"]
+db = client["db-messages"]
+cats_collection = db["messages"]
 
 
 def get_all(name: str | None = None) -> list[dict]:
@@ -165,8 +167,10 @@ def main_menu():
 
 
 if __name__ == "__main__":
-    client = create_connect()
-    db = client["db-cats"]
-    cats_collection = db["cats"]
+    # client = create_connect()
+    # # db = client["db-cats"]
+    # # cats_collection = db["cats"]
+    # db = client["db-messages"]
+    # collection = db["messages"]
 
     main_menu()

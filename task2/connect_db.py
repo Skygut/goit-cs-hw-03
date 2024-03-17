@@ -21,8 +21,10 @@ def create_connect() -> MongoClient:
 
 if __name__ == "__main__":
     client = create_connect()
-    db = client["db-cats"]
-    collection = db["cats"]
+    # db = client["db-cats"]
+    # collection = db["cats"]
+    db = client["db-messages"]
+    collection = db["messages"]
     cats = collection.find()
     for cat in cats:
         print(cat)
